@@ -127,12 +127,12 @@
 </head>
 <body>
 <div class="container">
-    <h2>JSON 加密工具</h2>
+    <h2>JSON MOCK工具</h2>
 
     <div id="encryptSection" class="section">
-        <h3><span class="fa-upload"></span>加密 JSON</h3>
+        <h3><span class="fa-upload"></span>MOCK JSON</h3>
         <textarea id="jsonInput" placeholder="输入 JSON，例如：{'name': 'John', 'age': 30}"></textarea>
-        <button onclick="encryptJson()"><span class="fa-arrow-right"></span>加密</button>
+        <button onclick="encryptJson()"><span class="fa-arrow-right"></span>MOCK</button>
     </div>
 
     <h3><span class="fa-file-alt"></span>结果</h3>
@@ -204,9 +204,9 @@
             // 生成 URL 并显示
             const baseUrl = window.location.origin + window.location.pathname;
             const encryptedUrl = `${baseUrl}?key=${encodeURIComponent(encoded)}`;
-            outputDiv.innerHTML = `加密结果: <a href="${encryptedUrl}" target="_blank">${encryptedUrl}</a>`;
+            outputDiv.innerHTML = `MOCK结果: <a href="${encryptedUrl}" target="_blank">${encryptedUrl}</a>`;
         } catch (e) {
-            outputDiv.textContent = "加密错误: " + e.message;
+            outputDiv.textContent = "MOCK错误: " + e.message;
         }
     }
 
