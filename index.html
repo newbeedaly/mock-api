@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON 加密工具</title>
+    <style>
+        /* 自定义字体（模拟 Roboto 的风格） */
+        body {
+            font-family: 'Arial', sans-serif; /* 替代 Roboto */
+            background: linear-gradient(135deg, #1e1e2f 0%, #2a2a4a 100%);
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        h2 {
+            font-size: 2em;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #00d4ff;
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
+        h3 {
+            font-size: 1.2em;
+            margin: 15px 0 10px;
+            color: #e0e0e0;
+        }
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            font-size: 1em;
+            resize: none;
+            transition: all 0.3s ease;
+        }
+        textarea:focus {
+            outline: none;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+            background: rgba(255, 255, 255, 0.15);
+        }
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            background: linear-gradient(45deg, #00d4ff, #007bff);
+            color: #ffffff;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.5);
+        }
+        #output {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #e0e0e0;
+            font-size: 1em;
+            word-break: break-all;
+            animation: fadeIn 0.5s ease;
+        }
+        #output a {
+            color: #00d4ff;
+            text-decoration: none;
+        }
+        #output a:hover {
+            text-decoration: underline;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .hidden {
+            display: none;
+        }
+        /* 模拟 Font Awesome 图标 */
+        .icon {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+            vertical-align: middle;
+            background-color: currentColor;
+        }
+        .fa-lock {
+            background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy533g0Ym5jZmMz/c3'+
+            'RlY2Z6Y3BFUq=');
+        }
+        .fa-upload {
+            background-image: url('...');
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            h2 {
+                font-size: 1.5em;
+            }
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2><span class="icon fa-lock"></span> JSON 加密工具</h2>
+
+    <div id="encryptSection" class="section">
+        <h3><span class="icon fa-upload"></span> 加密 JSON</h3>
+        <textarea id="jsonInput" placeholder="输入 JSON，例如：{'name': 'John', 'age': 30}"></textarea>
+        <button onclick="encryptJson()"><span class="icon fa-arrow-right"></span> 加密</button>
+    </div>
+
+    <h3><span class="icon fa-file-alt"></span> 结果</h3>
+    <div id="output"></div>
+</div>
+
+<script>
+    // 固定密钥（32 字节）
+    const keyRaw = new TextEncoder().encode("Sixteen byte key1234567890abcdef");
+    let cryptoKey;
+
+    // 初始化加密密钥
+    async function initKey() {
+        cryptoKey = await crypto.subtle.importKey(
+            "raw",
+            keyRaw,
+            { name: "AES-GCM" },
+            false,
+            ["encrypt", "decrypt"]
+        );
+    }
+
+    // 将 Uint8Array 转为 Base64
+    function arrayBufferToBase64(buffer) {
+        return btoa(String.fromCharCode(...new Uint8Array(buffer)));
+    }
+
+    // 将 Base64 转为 Uint8Array
+    function base64ToArrayBuffer(base64) {
+        const binary = atob(base64);
+        const len = binary.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+            bytes[i] = binary.charCodeAt(i);
+        }
+        return bytes;
+    }
+
+    // 加密 JSON 并生成 URL
+    async function encryptJson() {
+        const jsonInput = document.getElementById("jsonInput").value;
+        const outputDiv = document.getElementById("output");
+        try {
+            // 验证 JSON 格式
+            JSON.parse(jsonInput);
+
+            // 转换 JSON 为 Uint8Array
+            const jsonBytes = new TextEncoder().encode(jsonInput);
+
+            // 生成随机 IV
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+
+            // 加密
+            if (!cryptoKey) await initKey();
+            const encrypted = await crypto.subtle.encrypt(
+                { name: "AES-GCM", iv: iv },
+                cryptoKey,
+                jsonBytes
+            );
+
+            // 合并 IV 和密文
+            const result = new Uint8Array(iv.length + encrypted.byteLength);
+            result.set(iv, 0);
+            result.set(new Uint8Array(encrypted), iv.length);
+
+            // Base64 编码
+            const encoded = arrayBufferToBase64(result);
+
+            // 生成 URL 并显示
+            const baseUrl = window.location.origin + window.location.pathname;
+            const encryptedUrl = `${baseUrl}?key=${encodeURIComponent(encoded)}`;
+            outputDiv.innerHTML = `加密结果: <a href="${encryptedUrl}" target="_blank">${encryptedUrl}</a>`;
+        } catch (e) {
+            outputDiv.textContent = "加密错误: " + e.message;
+        }
+    }
+
+    // 解密字符串（仅用于 URL 参数）
+    async function decryptJson(encryptedInput) {
+        try {
+            // Base64 解码
+            const decoded = base64ToArrayBuffer(encryptedInput);
+
+            // 提取 IV 和密文
+            const iv = decoded.slice(0, 12);
+            const cipherText = decoded.slice(12);
+
+            // 解密
+            if (!cryptoKey) await initKey();
+            const decrypted = await crypto.subtle.decrypt(
+                { name: "AES-GCM", iv: iv },
+                cryptoKey,
+                cipherText
+            );
+
+            // 输出 JSON
+            const jsonStr = new TextDecoder().decode(decrypted);
+            document.open();
+            document.write(jsonStr);
+            document.close();
+        } catch (e) {
+            document.open();
+            document.write(JSON.stringify({ error: e.message }));
+            document.close();
+        }
+    }
+
+    // 页面加载时检查 URL 参数
+    window.onload = function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const encryptedKey = urlParams.get("key");
+        if (encryptedKey) {
+            document.getElementById("encryptSection").classList.add("hidden");
+            document.querySelector("h2").classList.add("hidden");
+            document.getElementById("output").classList.add("hidden");
+            decryptJson(encryptedKey);
+        }
+    };
+</script>
+</body>
+</html>
