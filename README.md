@@ -2,11 +2,13 @@
 
 ## 概述
 
-mock-api 是开箱即用的回显 HTTP 请求 mock api 的 Serverless 应用.
+mock-api 是开箱即用的回显 HTTP 请求 mock 的 Serverless 应用.
 
-![image](https://github.com/user-attachments/assets/4317414f-2fdf-48d6-8ae0-7f5758ad779f)
+![image](https://github.com/user-attachments/assets/217f649d-3d46-471e-81a0-7acd8a695aa5)
 
-![image](https://github.com/user-attachments/assets/bb6d7b81-a749-4a34-b463-149e0a7a2305)
+请求url获取结果
+
+![image](https://github.com/user-attachments/assets/991bfc6c-1046-4f03-8af8-a133025b77d8)
 
 
 ## 在线地址
